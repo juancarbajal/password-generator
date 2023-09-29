@@ -6,11 +6,17 @@ import (
 )
 
 // Generate a password with a specific size, consider alphanumeric and special characters
-func Generate(size int)  string {
+func Generate(size int, includeDigits bool, includeSpecial bool)  string {
 	chars := "abcdefghijklmnopqrstuvwxyz"
 	digits := "1234567890"
-	special := "@#%&/(){}!'[]?"
-	totalChars := chars + strings.ToUpper(chars) + special + digits
+	special := "~!@#$%^&*()_+`-={}|[]:<>?,./"
+	totalChars := chars + strings.ToUpper(chars) 
+	if includeDigits {
+		totalChars = totalChars+ digits 
+	}
+	if includeSpecial {
+		totalChars = totalChars + special
+	}
 	sizeTotalChars := len(totalChars)
 	pass := ""
 	rand.Seed(time.Now().UnixNano())
