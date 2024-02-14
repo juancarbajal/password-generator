@@ -3,25 +3,49 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+	"sync"
 )
+var wg sync.WaitGroup
+const THREADS = 6
 
 // Generate a password with a specific size, consider alphanumeric and special characters
-func Generate(size int, includeDigits bool, includeSpecial bool)  string {
+func generatePartial(size int, totalChars []rune, partChan chan string){
+	defer wg.Done()
+	sizeTotalChars := len(totalChars)
+	pass := ""
+	for i :=0; i < size; i++ {
+		pass = pass +  string(totalChars[rand.Intn(sizeTotalChars)])
+	}
+	partChan <- pass
+}
+
+func getTotalChars(includeDigits bool, includeSpecial bool) []rune {
 	chars := "abcdefghijklmnopqrstuvwxyz"
 	digits := "1234567890"
 	special := "~!@#$%^&*()_+`-={}|[]:<>?,./"
-	totalChars := chars + strings.ToUpper(chars) 
+	totalChars := chars + strings.ToUpper(chars)
 	if includeDigits {
 		totalChars = totalChars+ digits 
 	}
 	if includeSpecial {
 		totalChars = totalChars + special
 	}
-	sizeTotalChars := len(totalChars)
-	pass := ""
+	return []rune(totalChars)
+}
+func Generate(size int, includeDigits bool, includeSpecial bool) string {
+	totalChars := getTotalChars(includeDigits, includeSpecial)
 	rand.Seed(time.Now().UnixNano())
-	for i :=0; i < size; i++ {
-		pass = pass + string([]rune(totalChars)[rand.Intn(sizeTotalChars)])
+	partsChan := make(chan string, THREADS)
+	wg.Add(THREADS)
+	for i := 1;i <= THREADS; i++ {
+		go generatePartial(size/THREADS, totalChars, partsChan)		
 	}
-	return pass 
+	wg.Wait()
+	close(partsChan)
+
+	password := ""
+	for part := range(partsChan){
+		password += part
+	}
+	return password
 }
