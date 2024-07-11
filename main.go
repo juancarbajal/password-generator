@@ -9,7 +9,7 @@ import (
 	password "github.com/juancarbajal/password-generator/pkg"
 )
 
-const MAX_SIZE = 254
+const MAX_SIZE = 256
 
 func timer(name string) func() {
 	start := time.Now()
